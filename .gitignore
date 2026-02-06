@@ -1,0 +1,7 @@
+__pycache__/
+*.ipynb_checkpoints
+.DS_Store
+.env
+venv/
+*.pdf
+!Lab3_Submission_AliCihanOzdemir.pdf
