@@ -5,3 +5,6 @@ psycopg2-binary
 matplotlib
 seaborn
 ipykernel
+fpdf
+sqlalchemy
+scikit-learn
