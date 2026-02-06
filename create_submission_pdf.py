@@ -37,16 +37,16 @@ pdf.ln(5)
 # Project Summary
 pdf.chapter_title('Project Summary')
 summary_text = (
-    "1. Cloud Database & Data Generation: Established a PostgreSQL connection on Neon. "
-    "Created a Python script (lab3_sdg.py) to generate 500 synthetic employee records. "
-    "Implemented 20% 'dirty data' logic (missing values, inconsistent casing, invalid dates) to simulate real-world data engineering challenges.\n\n"
-    "2. Data Wrangling & Cleaning: Developed a Jupyter Notebook to extract data from the cloud. "
-    "Used Pandas to inspect quality, impute missing salaries using position-based medians, "
-    "standardize job titles, and filter out logical date errors.\n\n"
+    "1. Cloud Database & Advanced Architecture: Established a PostgreSQL connection on Neon. "
+    "Designed a multi-table schema with 'employees' and 'departments' connected via Foreign Keys to simulate enterprise data complexity. "
+    "Created a Python script (lab3_sdg.py) to generate 500 synthetic employee records linked to 5 departments, utilizing 20% 'dirty data' logic.\n\n"
+    "2. Data Wrangling & Cleaning: Developed a Jupyter Notebook to extract data from multiple SQL tables. "
+    "Used Pandas to inspect quality, impute missing salaries, standardize job titles, and resolve logic errors. "
+    "Performed a SQL-style Inner Join in Pandas to enrich employee records with departmental metadata.\n\n"
     "3. Feature Engineering & Scaling: Created 'start_year' and 'years_of_service' features. "
     "Applied Z-Score standardization (StandardScaler) to salary data to prepare it for potential Neural Network applications.\n\n"
     "4. Visual Intelligence: Built advanced visualizations including a Grouped Bar Chart for salary trends "
-    "and a FacetGrid Heatmap for departmental salary distributions using a synthetic SQL-style join."
+    "and a FacetGrid Heatmap for departmental salary distributions using the joined dataset."
 )
 pdf.chapter_body(summary_text)
 

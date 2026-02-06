@@ -20,29 +20,57 @@ def get_db_connection():
         print(f"Error connecting to database: {e}")
         return None
 
-def create_table(conn):
-    """Creates the employees table if it doesn't exist."""
-    create_table_query = """
-    DROP TABLE IF EXISTS employees;
-    CREATE TABLE employees (
-        employee_id SERIAL PRIMARY KEY,
-        name VARCHAR(255),
-        position VARCHAR(255),
-        start_date DATE,
-        salary FLOAT
-    );
-    """
+
+def create_tables(conn):
+    """Creates the departments and employees tables with FK relationship."""
+    commands = (
+        """
+        DROP TABLE IF EXISTS employees;
+        DROP TABLE IF EXISTS departments;
+        """,
+        """
+        CREATE TABLE departments (
+            dept_id SERIAL PRIMARY KEY,
+            dept_name VARCHAR(255) UNIQUE NOT NULL,
+            location VARCHAR(255),
+            budget FLOAT
+        )
+        """,
+        """
+        CREATE TABLE employees (
+            employee_id SERIAL PRIMARY KEY,
+            name VARCHAR(255),
+            position VARCHAR(255),
+            start_date DATE,
+            salary FLOAT,
+            dept_id INTEGER,
+            FOREIGN KEY (dept_id) REFERENCES departments (dept_id)
+        )
+        """
+    )
     try:
         cur = conn.cursor()
-        cur.execute(create_table_query)
+        for command in commands:
+            cur.execute(command)
         conn.commit()
         cur.close()
-        print("Table 'employees' created successfully.")
+        print("Tables 'departments' and 'employees' created successfully.")
     except Exception as e:
-        print(f"Error creating table: {e}")
+        print(f"Error creating tables: {e}")
 
-def generate_data(num_records, dirty_prob):
-    """Generates synthetic data with injected errors."""
+def generate_departments():
+    """Generates static department data."""
+    depts = [
+        ("Engineering", "Building A", 5000000.00),
+        ("Data Science", "Building B", 3500000.00),
+        ("Product", "Building A", 2000000.00),
+        ("Sales", "Building C", 4500000.00),
+        ("HR", "Building D", 1500000.00)
+    ]
+    return depts # Returns list of tuples (name, loc, budget)
+
+def generate_employees(num_records, dirty_prob):
+    """Generates synthetic employee data linked to departments."""
     data = []
     
     positions_list = [
@@ -50,6 +78,9 @@ def generate_data(num_records, dirty_prob):
         "HR Specialist", "Marketing Manager", "Sales Associate",
         "Product Owner", "DevOps Engineer", "QA Analyst", "System Admin"
     ]
+    
+    # Map positions to likely departments for realism (optional, but good)
+    # dept_ids are 1 to 5 based on insertion order above
     
     for _ in range(num_records):
         is_dirty = random.random() < dirty_prob
@@ -59,66 +90,64 @@ def generate_data(num_records, dirty_prob):
         position = random.choice(positions_list)
         start_date = fake.date_between(start_date='-10y', end_date='today')
         salary = round(random.uniform(50000, 150000), 2)
+        dept_id = random.randint(1, 5) # Randomly assign to one of the 5 depts
         
         if is_dirty:
             dirty_choice = random.choice(['missing_name', 'missing_salary', 'bad_casing', 'logic_error'])
             
             if dirty_choice == 'missing_name':
-                name = None # Simulate missing name for SQL (will be NULL)
-            
+                name = None 
             elif dirty_choice == 'missing_salary':
-                salary = None # Simulate missing salary
-                
+                salary = None 
             elif dirty_choice == 'bad_casing':
-                # Randomly lowercase or uppercase
                 if random.random() > 0.5:
                     position = position.lower()
                 else:
                     position = position.upper()
-                    
             elif dirty_choice == 'logic_error':
-                # invalid dates (prospectively in future or way past)
-                # Note: modifying date to be outside reasonable range [2015-2024]
-                # Lab requirement says: "dates before 2015 or after 2024"
-                # To be safe with SQL DATE type, stick to valid calendar dates but outside the logic range.
                 if random.random() > 0.5:
-                     start_date = fake.date_between(start_date='-20y', end_date='-11y') # Before 2015
+                     start_date = fake.date_between(start_date='-20y', end_date='-11y') 
                 else:
-                     start_date = fake.date_between(start_date='+1y', end_date='+2y') # Future date
+                     start_date = fake.date_between(start_date='+1y', end_date='+2y') 
         
-        data.append((name, position, start_date, salary))
+        data.append((name, position, start_date, salary, dept_id))
         
     return data
 
-def insert_data(conn, data):
-    """Inserts generated data into the database."""
-    insert_query = "INSERT INTO employees (name, position, start_date, salary) VALUES (%s, %s, %s, %s)"
+def insert_data(conn, depts, employees):
+    """Inserts generated data into both tables."""
+    insert_dept = "INSERT INTO departments (dept_name, location, budget) VALUES (%s, %s, %s)"
+    insert_emp = "INSERT INTO employees (name, position, start_date, salary, dept_id) VALUES (%s, %s, %s, %s, %s)"
+    
     try:
         cur = conn.cursor()
-        cur.executemany(insert_query, data)
+        # Insert Departments first (Parent table)
+        cur.executemany(insert_dept, depts)
         conn.commit()
+        print(f"Successfully inserted {len(depts)} departments.")
+        
+        # Insert Employees (Child table with FK)
+        cur.executemany(insert_emp, employees)
+        conn.commit()
+        print(f"Successfully inserted {len(employees)} employees.")
+        
         cur.close()
-        print(f"Successfully inserted {len(data)} records.")
     except Exception as e:
         print(f"Error inserting data: {e}")
 
 def main():
-    print("--- Starting Lab 3 Data Generation ---")
+    print("--- Starting Lab 3 Data Generation (Multi-Table) ---")
     
-    # 1. Connect
     conn = get_db_connection()
-    if not conn:
-        return
+    if not conn: return
         
-    # 2. Create Table
-    create_table(conn)
+    create_tables(conn)
     
-    # 3. Generate Data
-    print(f"Generating {NUM_RECORDS} records with {int(DIRTY_PERCENTAGE*100)}% dirty data probability...")
-    dataset = generate_data(NUM_RECORDS, DIRTY_PERCENTAGE)
+    print("Generating schema data...")
+    depts = generate_departments()
+    emp_data = generate_employees(NUM_RECORDS, DIRTY_PERCENTAGE)
     
-    # 4. Insert Data
-    insert_data(conn, dataset)
+    insert_data(conn, depts, emp_data)
     
     conn.close()
     print("--- Data Generation Complete ---")
