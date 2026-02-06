@@ -30,7 +30,7 @@ pdf.ln(10)
 pdf.chapter_title('GitHub Repository')
 pdf.set_font('Arial', 'U', 11)
 pdf.set_text_color(0, 0, 255)
-pdf.cell(0, 6, 'https://github.com/alicih4n/Lab3-DataEngineering.git', 0, 1, link='https://github.com/alicih4n/Lab3-DataEngineering.git')
+pdf.cell(0, 6, 'https://github.com/alicih4n/WranglingWorkshop.git', 0, 1, link='https://github.com/alicih4n/WranglingWorkshop.git')
 pdf.set_text_color(0, 0, 0)
 pdf.ln(5)
 
