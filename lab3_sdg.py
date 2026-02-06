@@ -88,7 +88,8 @@ def generate_employees(num_records, dirty_prob):
         # Basic fields
         name = fake.name()
         position = random.choice(positions_list)
-        start_date = fake.date_between(start_date='-10y', end_date='today')
+        # Fix date generation to strictly align with notebook's 2024 analysis year
+        start_date = fake.date_between(start_date='-9y', end_date=datetime.date(2024, 12, 31))
         salary = round(random.uniform(50000, 150000), 2)
         dept_id = random.randint(1, 5) # Randomly assign to one of the 5 depts
         
